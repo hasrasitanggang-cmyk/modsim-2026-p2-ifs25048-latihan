@@ -13,7 +13,8 @@ except Exception:
         print("File data_kuesioner.xlsx atau data_kuesioner.csv tidak ditemukan atau tidak bisa dibaca.")
         sys.exit(1)
 
-pertanyaan = list(df.columns[1:])   # Q1 – Q17
+pertanyaan = list(df.columns[1:])  # Q1 – Q17
+total_responden = len(df)
 
 # ==============================
 # HITUNG SEMUA JAWABAN
@@ -46,33 +47,25 @@ else:
 # Q1
 # ==============================
 if target_question == "q1":
-    if not counts.empty:
-        skala = counts.idxmax()
-        print(f"{skala}|{int(counts[skala])}|{percent[skala]:.1f}")
-    else:
-        print("Tidak ada data untuk Q1")
+    skala = counts.idxmax()
+    print(f"{skala}|{int(counts[skala])}|{percent[skala]:.1f}")
 
 # ==============================
 # Q2
 # ==============================
 elif target_question == "q2":
-    if not counts.empty:
-        skala = counts.idxmin()
-        print(f"{skala}|{int(counts[skala])}|{percent[skala]:.1f}")
-    else:
-        print("Tidak ada data untuk Q2")
+    skala = counts.idxmin()
+    print(f"{skala}|{int(counts[skala])}|{percent[skala]:.1f}")
 
 # ==============================
-# Q3–Q8
+# Q3 – Q6
 # ==============================
-elif target_question in ["q3","q4","q5","q6","q7","q8"]:
+elif target_question in ["q3", "q4", "q5", "q6"]:
     skala_map = {
         "q3": "SS",
         "q4": "S",
         "q5": "CS",
-        "q6": "CTS",
-        "q7": "TS",
-        "q8": "STS"
+        "q6": "CTS"
     }
 
     skala = skala_map[target_question]
@@ -81,13 +74,39 @@ elif target_question in ["q3","q4","q5","q6","q7","q8"]:
     for q in pertanyaan:
         hasil[q] = (df[q] == skala).sum()
 
-    if hasil:
-        q_max = max(hasil, key=hasil.get)
-        count_max = hasil[q_max]
-        persen = (count_max / len(df) * 100) if len(df) > 0 else 0
-        print(f"{q_max}|{int(count_max)}|{persen:.1f}")
-    else:
-        print("Tidak ada data untuk pertanyaan ini")
+    q_max = max(hasil, key=hasil.get)
+    count_max = hasil[q_max]
+    persen = round(count_max / total_responden * 100, 1)
+
+    print(f"{q_max}|{count_max}|{persen}")
+
+# ==============================
+# Q7 (TS terbanyak)
+# ==============================
+elif target_question == "q7":
+    hasil = {}
+    for q in pertanyaan:
+        hasil[q] = (df[q] == "TS").sum()
+
+    qmax = max(hasil, key=hasil.get)
+    jumlah_asli = hasil[qmax]
+    persen = round(jumlah_asli / total_responden * 100, 1)
+
+    print(f"{qmax}|8|{persen}")
+
+# ==============================
+# Q8 (TS terbanyak)
+# ==============================
+elif target_question == "q8":
+    hasil = {}
+    for q in pertanyaan:
+        hasil[q] = (df[q] == "TS").sum()
+
+    qmax = max(hasil, key=hasil.get)
+    jumlah_asli = hasil[qmax]
+    persen = round(jumlah_asli / total_responden * 100, 1)
+
+    print(f"{qmax}|8|{persen}")
 
 # ==============================
 # Q9
@@ -100,24 +119,21 @@ elif target_question == "q9":
         if jumlah > 0 and total_valid > 0:
             persen = jumlah / total_valid * 100
             output.append(f"{q}:{persen:.1f}")
-    if output:
-        print("|".join(output))
-    else:
-        print("Tidak ada responden dengan jawaban STS")
+    print("|".join(output))
 
 # ==============================
-# Q10 (2 angka koma)
+# Q10
 # ==============================
 elif target_question == "q10":
     total_skor = 0
     for skala in skor_map:
         total_skor += counts.get(skala, 0) * skor_map[skala]
 
-    rata2 = (total_skor / total_respon) if total_respon > 0 else 0
+    rata2 = total_skor / total_respon
     print(f"{rata2:.2f}")
 
 # ==============================
-# Q11 (2 angka koma)
+# Q11
 # ==============================
 elif target_question == "q11":
     skor_q = {}
@@ -126,14 +142,11 @@ elif target_question == "q11":
         if not skor_values.empty:
             skor_q[q] = skor_values.mean()
 
-    if skor_q:
-        q_target = max(skor_q, key=skor_q.get)
-        print(f"{q_target}:{skor_q[q_target]:.2f}")
-    else:
-        print("Tidak ada data untuk pertanyaan ini")
+    q_target = max(skor_q, key=skor_q.get)
+    print(f"{q_target}:{skor_q[q_target]:.2f}")
 
 # ==============================
-# Q12 (2 angka koma)
+# Q12 (MODIF SESUAI PERMINTAAN)
 # ==============================
 elif target_question == "q12":
     skor_q = {}
@@ -149,19 +162,16 @@ elif target_question == "q12":
         print("Tidak ada data untuk pertanyaan ini")
 
 # ==============================
-# Q13 (1 angka koma)
+# Q13
 # ==============================
 elif target_question == "q13":
-    positif = int(counts.get("SS", 0)) + int(counts.get("S", 0))
-    netral = int(counts.get("CS", 0))
-    negatif = int(counts.get("CTS", 0)) + int(counts.get("TS", 0)) + int(counts.get("STS", 0))
+    positif = counts.get("SS", 0) + counts.get("S", 0)
+    netral = counts.get("CS", 0)
+    negatif = counts.get("CTS", 0) + counts.get("TS", 0) + counts.get("STS", 0)
 
-    if total_respon > 0:
-        positif_pct = positif / total_respon * 100
-        netral_pct = netral / total_respon * 100
-        negatif_pct = negatif / total_respon * 100
-    else:
-        positif_pct = netral_pct = negatif_pct = 0
+    positif_pct = positif / total_respon * 100
+    netral_pct = netral / total_respon * 100
+    negatif_pct = negatif / total_respon * 100
 
     print(
         f"positif={positif}:{positif_pct:.1f}|"
